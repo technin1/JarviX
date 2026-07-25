@@ -1,0 +1,59 @@
+# TEMPLATE — não está ativo ainda.
+#
+# Quando você tiver um domínio (ex: jarvix.com) apontando pro 129.121.33.93
+# via registro DNS tipo A, e já tiver rodado ./init-letsencrypt.sh com
+# sucesso, faça isto pra ativar o HTTPS:
+#
+#   1. Troque SEU-DOMINIO-AQUI.com pelo seu domínio real (2 lugares abaixo)
+#   2. Renomeie este arquivo removendo o ".template":
+#        mv nginx/nginx-ssl.conf.template nginx/nginx-ssl.conf
+#   3. No docker-compose.yml, troque o volume do nginx de:
+#        ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+#      para:
+#        ./nginx/nginx-ssl.conf:/etc/nginx/conf.d/default.conf:ro
+#   4. docker compose up -d --build nginx
+
+server {
+    listen 80;
+    server_name SEU-DOMINIO-AQUI.com;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Redireciona todo tráfego HTTP pra HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name SEU-DOMINIO-AQUI.com;
+
+    ssl_certificate /etc/letsencrypt/live/SEU-DOMINIO-AQUI.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/SEU-DOMINIO-AQUI.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://backend:3000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://backend:3000/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}

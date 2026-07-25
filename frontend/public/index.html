@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>JarviX</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Reformulação: Dashboard é a tela inicial (perfil + preferências de IA),
+       não o Chat. Layout tecnológico: fundo escuro, grade sutil, acento ciano,
+       tipografia mono nos rótulos. Logo injetada via JS (renderLogo) pra não
+       duplicar o mesmo SVG em dois lugares do HTML. -->
+
+  <div id="auth-screen">
+    <div id="logo-auth" class="logo logo-svg"></div>
+
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-tab="login">Entrar</button>
+      <button type="button" class="auth-tab" data-tab="signup">Criar conta</button>
+    </div>
+
+    <form id="login-form" class="auth-panel active">
+      <input id="login-email" type="email" placeholder="E-mail" required />
+      <input id="login-password" type="password" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+
+    <form id="signup-form" class="auth-panel">
+      <input id="signup-username" placeholder="Nome de usuário" required />
+      <input id="signup-email" type="email" placeholder="E-mail" required />
+      <input id="signup-phone" type="tel" placeholder="Telefone (com DDD)" required />
+      <input id="signup-password" type="password" placeholder="Senha" required />
+      <button type="submit">Criar conta</button>
+    </form>
+
+    <p id="auth-error" class="error"></p>
+  </div>
+
+  <div id="app" class="hidden">
+    <aside id="sidebar">
+      <div id="logo-sidebar" class="logo logo-svg logo-sidebar"></div>
+
+      <nav>
+        <button data-view="dashboard" class="nav-item"><span class="nav-icon">◈</span> Dashboard</button>
+        <button data-view="chat-full" class="nav-item"><span class="nav-icon">▷</span> Chat</button>
+        <button data-view="feed" class="nav-item"><span class="nav-icon">▦</span> Feed / Comunidade</button>
+        <button data-view="cache" class="nav-item"><span class="nav-icon">▥</span> Cache temporário</button>
+        <button data-view="scripting-teacher" class="nav-item"><span class="nav-icon">✎</span> Scripting Teacher</button>
+        <button data-view="member-control" class="nav-item admin-only hidden"><span class="nav-icon">▤</span> Member Control</button>
+        <a href="/admin.html" class="nav-item admin-only hidden nav-link"><span class="nav-icon">▧</span> Curadoria IA</a>
+      </nav>
+
+      <button id="logout-btn">Sair</button>
+    </aside>
+
+    <main id="main-view">
+
+      <!-- Dashboard: tela inicial. Perfil, atividade e preferências que a IA usa como contexto. -->
+      <section id="dashboard-view" class="view">
+        <h2>Dashboard</h2>
+        <p id="dashboard-greeting" class="hint"></p>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <h3>Resumo de atividade</h3>
+            <div id="profile-chart-wrap"></div>
+            <ul id="profile-legend" class="legend"></ul>
+          </div>
+
+          <div class="card shortcuts-card">
+            <h3>Atalhos rápidos</h3>
+            <button data-view="chat-full" class="shortcut-btn">▷ Ir para o Chat</button>
+            <button data-view="feed" class="shortcut-btn">▦ Ver Projetos</button>
+            <button data-view="cache" class="shortcut-btn">▥ Cache temporário</button>
+            <button data-view="member-control" class="shortcut-btn admin-only hidden">▤ Member Control</button>
+          </div>
+
+          <div class="card preferences-card">
+            <h3>Preferências da IA</h3>
+            <p class="hint">A IA usa isto como contexto em todas as suas conversas.</p>
+
+            <form id="preferences-form">
+              <label class="field-label">
+                Tom de resposta
+                <select id="pref-tone">
+                  <option value="casual">Casual</option>
+                  <option value="formal">Formal</option>
+                  <option value="tecnico">Técnico</option>
+                </select>
+              </label>
+
+              <div class="field-label">
+                Áreas de foco
+                <div id="pref-focus-chips" class="chip-group">
+                  <button type="button" class="chip" data-focus="codigo">Código</button>
+                  <button type="button" class="chip" data-focus="produtividade">Produtividade</button>
+                  <button type="button" class="chip" data-focus="negocios">Negócios</button>
+                  <button type="button" class="chip" data-focus="criativo">Criativo</button>
+                  <button type="button" class="chip" data-focus="dados">Dados</button>
+                  <button type="button" class="chip" data-focus="suporte">Suporte</button>
+                </div>
+              </div>
+
+              <label class="field-label">
+                Objetivo atual
+                <input id="pref-goal" placeholder="Ex: lançar meu SaaS de gestão" maxlength="140" />
+              </label>
+
+              <button type="submit">Salvar preferências</button>
+              <p id="preferences-saved" class="hint success-text"></p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cache temporário: uploads recentes do usuário -->
+      <section id="cache-view" class="view hidden">
+        <h2>Cache temporário</h2>
+        <p class="hint">Arquivos enviados recentemente, ainda em análise ou já processados.</p>
+        <div id="cache-list"></div>
+      </section>
+
+      <!-- Scripting Teacher: treino de digitação de código com IA -->
+      <section id="scripting-teacher-view" class="view hidden">
+        <div id="st-layout">
+
+          <aside id="st-sidebar">
+            <h2>Scripting Teacher</h2>
+            <p class="hint">Sobrescreva o código-fantasma da IA, caractere a caractere, e receba sugestões a cada linha.</p>
+
+            <button id="st-new-session-btn" class="btn-primary st-new-btn">+ New Session</button>
+
+            <div class="st-folder">
+              <button type="button" class="st-folder-title" data-st-toggle="last">📄 Last Session</button>
+              <div id="st-last-session" class="st-folder-body hidden">
+                <p class="hint">Nenhuma sessão salva ainda.</p>
+              </div>
+            </div>
+
+            <div class="st-folder">
+              <button type="button" class="st-folder-title" data-st-toggle="sessions">🗂 Sessions <span class="hint">(últimas 5)</span></button>
+              <div id="st-sessions-list" class="st-folder-body hidden"></div>
+            </div>
+
+            <div class="st-folder">
+              <button type="button" class="st-folder-title" data-st-toggle="archives">
+                🗃 My Archives <span id="st-archives-count" class="badge">0/15</span>
+              </button>
+              <div id="st-archives-list" class="st-folder-body hidden"></div>
+            </div>
+
+            <div class="st-folder">
+              <button type="button" class="st-folder-title" data-st-toggle="projects">📦 Projects</button>
+              <div id="st-projects-panel" class="st-folder-body hidden">
+                <label class="btn-secondary st-upload-label">
+                  ⬆ Upload .zip
+                  <input type="file" id="st-project-upload" accept=".zip,application/zip" hidden />
+                </label>
+                <p class="hint">Clique duplo num arquivo abre no Now.</p>
+                <div id="st-projects-list"></div>
+              </div>
+            </div>
+          </aside>
+
+          <div id="st-now">
+            <div id="st-now-header">
+              <input id="st-session-title" placeholder="Sessão sem título" maxlength="80" />
+              <select id="st-language">
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="sql">SQL</option>
+              </select>
+              <span id="st-save-indicator" class="hint"></span>
+              <button type="button" id="st-export-btn" class="btn-secondary">Exportar p/ My Archives</button>
+            </div>
+
+            <!-- Chat isolado: só serve pra pedir um código-fantasma novo à IA.
+                 Fica separado dos dois painéis de treino (ver obs. do módulo). -->
+            <div id="st-prompt-chat">
+              <div id="st-prompt-log" class="hidden"></div>
+              <form id="st-prompt-form">
+                <textarea id="st-prompt-input" rows="1" placeholder="Peça um exercício à IA (ex: função que ordena uma lista)..."></textarea>
+                <button type="submit">Gerar</button>
+              </form>
+            </div>
+
+            <div class="st-panels">
+              <div id="st-panel-upper" class="st-panel">
+                <div class="st-panel-label">Painel de digitação <span class="hint">— digite por cima do código-fantasma</span></div>
+                <div id="st-editor" tabindex="0" spellcheck="false"></div>
+              </div>
+
+              <div id="st-panel-lower" class="st-panel st-panel-readonly">
+                <div class="st-panel-label">Sugestões da IA <span class="hint">— a cada Enter</span></div>
+                <div id="st-suggestions">
+                  <p class="hint">Comece a digitar no painel de cima; as sugestões aparecem aqui a cada linha finalizada.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Confirmação antes de descartar/salvar conteúdo do Now -->
+      <div id="st-confirm-modal" class="modal hidden">
+        <div class="modal-box">
+          <p id="st-confirm-text">Você tem conteúdo não salvo no Now. O que deseja fazer?</p>
+          <div class="modal-actions">
+            <button type="button" id="st-confirm-save" class="btn-primary">Salvar e continuar</button>
+            <button type="button" id="st-confirm-discard" class="btn-secondary">Descartar</button>
+            <button type="button" id="st-confirm-cancel" class="btn-text">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feed social -->
+      <section id="feed-view" class="view hidden">
+        <h2>Projetos e prompts compartilhados</h2>
+        <form id="share-form">
+          <input id="share-title" placeholder="Título do projeto" required />
+          <textarea id="share-description" placeholder="Descrição"></textarea>
+          <textarea id="share-prompt" placeholder="Prompt usado (opcional)"></textarea>
+          <label><input id="share-public" type="checkbox" checked /> Público</label>
+          <button type="submit">Compartilhar</button>
+        </form>
+        <div id="feed-list"></div>
+      </section>
+
+      <!-- Chat fullscreen -->
+      <section id="chat-full-view" class="view hidden">
+        <div id="messages"></div>
+        <form id="chat-form">
+          <button type="button" id="chat-attach-btn" class="attach-btn" title="Anexar arquivo">📎</button>
+          <input type="file" id="chat-file-input" hidden />
+          <input id="chat-input" placeholder="Fale com o JarviX..." autocomplete="off" />
+          <button type="submit">Enviar</button>
+        </form>
+      </section>
+
+      <!-- Member Control (admin only) -->
+      <section id="member-control-view" class="view hidden">
+        <h2>Member Control</h2>
+        <p class="hint">
+          Dados sensíveis (CPF, RG, CNH). Acesso restrito a administradores.
+          A foto da CNH fica em armazenamento privado, nunca pública.
+        </p>
+
+        <form id="member-form" class="card">
+          <div class="form-row">
+            <input id="member-full-name" placeholder="Nome completo *" required />
+            <input id="member-email" type="email" placeholder="E-mail *" required />
+          </div>
+          <div class="form-row">
+            <input id="member-phone" placeholder="Telefone" />
+            <input id="member-whatsapp" placeholder="WhatsApp" />
+          </div>
+          <div class="form-row">
+            <input id="member-cpf" placeholder="CPF *" required />
+            <input id="member-rg" placeholder="RG *" required />
+          </div>
+          <div class="form-row">
+            <input id="member-cnh-number" placeholder="Número da CNH *" required />
+          </div>
+          <div class="form-row">
+            <label class="field-label">
+              Data de emissão da CNH *
+              <input id="member-cnh-issue" type="date" required />
+            </label>
+            <label class="field-label">
+              Data de validade da CNH *
+              <input id="member-cnh-expiry" type="date" required />
+            </label>
+          </div>
+          <label class="field-label">
+            Foto da CNH * (frente, legível)
+            <input id="member-cnh-photo" type="file" accept="image/*" required />
+          </label>
+          <button type="submit">Cadastrar membro</button>
+          <p id="member-form-error" class="error"></p>
+        </form>
+
+        <h3 class="list-title">Membros cadastrados</h3>
+        <div id="members-list"></div>
+      </section>
+
+    </main>
+
+    <!-- Mini chat estilo Messenger, sempre visível/flutuante -->
+    <div id="mini-chat" class="collapsed">
+      <div id="mini-chat-header">Mini Chat</div>
+      <div id="mini-chat-body">
+        <div id="mini-messages"></div>
+        <form id="mini-chat-form">
+          <button type="button" id="mini-attach-btn" class="attach-btn" title="Anexar arquivo">📎</button>
+          <input type="file" id="mini-file-input" hidden />
+          <input id="mini-chat-input" placeholder="Mensagem rápida..." autocomplete="off" />
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="members.js"></script>
+  <script type="module" src="scriptingTeacher.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

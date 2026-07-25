@@ -1,0 +1,29 @@
+# Segredos — NUNCA suba isso pro GitHub
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Modelos e adaptadores treinados (pesados, não pertencem ao git)
+ai-core/finetune/adapters/*
+!ai-core/finetune/adapters/.gitkeep
+
+# Certificados SSL (gerados pelo certbot, não são segredo de código mas
+# não fazem sentido versionar — são recriados no VPS)
+certbot/conf/*
+!certbot/conf/.gitkeep
+certbot/www/*
+!certbot/www/.gitkeep
+
+# Sistema
+.DS_Store
+*.log

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>JarviX — Moderação de Fine-tuning</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .examples { max-width: 800px; margin: 2rem auto; }
+    .example-card { background: var(--color-surface); padding: 1rem; margin-bottom: 1rem; border-radius: var(--radius); border-left: 3px solid var(--color-accent); }
+    .example-card .actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+    .example-card button { padding: 0.4rem 0.8rem; border: none; border-radius: var(--radius); cursor: pointer; }
+    .btn-approve { background: #4a7c3f; color: white; }
+    .btn-reject { background: #a3372d; color: white; }
+  </style>
+</head>
+<body>
+  <div class="examples">
+    <h1>Moderação — exemplos de fine-tuning pendentes</h1>
+    <p>Só usuários com <code>is_admin=true</code> conseguem ver isto (protegido pelo backend).</p>
+    <div id="list">Carregando...</div>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

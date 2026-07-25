@@ -1,0 +1,8 @@
+project_id = "jarvix"
+
+# Depois de rodar `supabase init` de verdade (recomendado) ou usar este
+# arquivo como base, rode:
+#   supabase link --project-ref SEU-PROJECT-REF
+#   supabase db push
+# Isso aplica supabase/migrations/*.sql direto no seu projeto remoto,
+# sem precisar colar SQL manualmente no dashboard.

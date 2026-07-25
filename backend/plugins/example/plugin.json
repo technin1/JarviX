@@ -1,0 +1,8 @@
+{
+  "name": "Example Plugin",
+  "description": "Plugin de exemplo do JarviX. Demonstra como se acoplar aos hooks do backend (chat, membros, uploads) sem editar o código principal. Desabilitado por padrão — sirva de modelo para plugins reais.",
+  "version": "1.0",
+  "author": "JarviX",
+  "enabled": false,
+  "entry": "index.js"
+}
